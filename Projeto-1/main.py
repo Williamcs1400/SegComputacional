@@ -1,5 +1,3 @@
-import numpy as np
-
 def cipher(plaintext, key):
     # Corrige key, se necessario
     builderKey = mendKey(key, len(plaintext))
@@ -8,7 +6,7 @@ def cipher(plaintext, key):
     for i in range(len(plaintext)):
         # ord() retorna a posicao na tabela ascii 
         # para cada posicao da string somamos o codigo ascii e fazemos % 26 
-        # e somamos com ord(a) = '65'
+        # e somamos 65 = ord('A')
         # assim garantimos que o texto cifrado sempre vai estar dentro do alfabeto
         builder = (ord(plaintext[i]) + ord(builderKey[i])) % 26
         builder += ord('A')
