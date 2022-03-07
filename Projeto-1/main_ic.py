@@ -1,5 +1,5 @@
 def input_file(file):
-    f = open(file, 'r')
+    f = open(file, 'r', encoding='utf8')
     return f.read().upper()
 
 def valid_char(char):
@@ -123,18 +123,18 @@ class Attack:
         #print(candidate_key)
 
 def main():
-    print('======== Cifrador ========')
-    print('Texto carregado de input_pt.txt')
-    plaintext = input_file('input_pt.txt') # input("Digite a mensagem a ser cifrada: ") 
-    key = input("Agora digite a chave para cifrá-la: ").upper()
-    print(cipher(plaintext, key))
+    # print('======== Cifrador ========')
+    # print('Texto carregado de input_pt.txt')
+    # plaintext = input_file('input_pt.txt') # input("Digite a mensagem a ser cifrada: ") 
+    # key = input("Agora digite a chave para cifrá-la: ").upper()
+    # print(cipher(plaintext, key))
 
-    print('\n======== Decifrador ========')
-    ciphertext = cipher(plaintext, key)
-    key = input("Digite a chave: ").upper()
-    print(decipher(ciphertext, key))
+    # print('\n======== Decifrador ========')
+    # ciphertext = cipher(plaintext, key)
+    # key = input("Digite a chave: ").upper()
+    # print(decipher(ciphertext, key))
 
-    #ciphertext = "TV JMS YFG KZFHVI UCQ NYJ GVSG YJOXJ RINS CE HBRY JRWH JMS ZX NYJ XRNBNZJGN YVCEL OEISL F VFSBYK CH YVCJ DFRSSN XC JFM KMS JJFJVSHCEJ-GVBG KT U ROH XVY QWPVX KLNSNCD MZSUM FH TTBWVWHM IFCMJG FZH RY ZZAS VASLP RUP OHU FYKZFHJ ON XSPVS MYFFJ KCL IWHEJF JJZXFR AFJG FZH RY IKMSL YWGVX YOHSJK KBVS MYJ MZSUM MOM TBFP CHV AUCJ PZXWNFW VLY U LCIU RYRQ IW VCD VY NG UFFE MOHUXCGV OHU RUJMWHX BYMJF TFZFJ ZYJX NYFB FSQY F XRD UEI IWYSH YKCTJ BV WM F GI UIUKFYP BIIYCH TT KMS ZSBYI HYDUZY XSY YVY FRPRSHUXJG FK U HOVDFB RX U HCHWNRUEY NYJM YFR UWWPVS BZR BFRS R RIQJB KNAYJ TLFR MVWDYEYWHV-AYNX UEI EEJK RQZ RGCOK VCD KBVS C MOX QWMKJBYU HI FZF YVYP VUU HI YSFC W SJUUE HI BOFB IJ FBX ICQE BYRW VINCHP ZIULS FSQY RCLV OHU HI YVCEP IMJF DD JCFB FK WRRDUZLB YVCJ UIUKFYP BIIYCH BOM JJCUJBNCD UE WGGTFNRSH WFQNFW CE HBV AUKYSL MS NFG R ZUNDSL YVUK GILSRYU CGZSCOJ KBRY QRX NYJ LVQONZTB SJHQVJB KMSG FBX BVUK HBV CVAJQN TT YNG IJDYRYSX AWMZYG? BOM XVY MWM HZCVSH YNG WWWYEI II VCJ ACJYFYJX? ZK NYJ ZFWAYI GBV VUU DLFGOVCD NIFBMWJFLVI NYJ JYTHIXWOJY HI MWM PSYGNBA NT KMS CFHNVW CK KUJ ZYJX FZPSFP CH YVY NGMLJ IW HBZX KLJGNZTB UJDYEISX BVYKMSL N MYTIFU QIEYWHLJ GP KIIP UK PLZTBS QCXXJ II HOIS GP ONKJBNZTB KT NYJ AVSHFVROHJ QBRRPYIX CE HBV HYDUZY NH NFG R RYCNQUKJ JFNBN FBX NH NNRYEJR KMS WNSFU CZ RM ZSEOZWM Z TYRW NYFH Z PIIJ SFZ QZYV KMSMV RYKFWFJ POK W YFJY YC CJH PTI JJS DD FZYHFV RCWKWWLQHCVX CW MIL OLV HI ZBXVWGNRSR KMS JNHORYWIE"
+    ciphertext = input_file('desafio1.txt')
 
     atk = Attack(lang='pt')
     atk.run(ciphertext)

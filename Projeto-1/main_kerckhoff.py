@@ -1,42 +1,61 @@
-# import matplotlib.pyplot as plt
-# import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
 
 def input_file(file):
-    f = open(file, 'r')
+    f = open(file, 'r', encoding='utf8')
     return f.read().upper()
 
 def valid_char(char):
     return ord(char) >= ord('A') and ord(char) <= ord('Z')
 
 def cipher(plaintext, key):
+    clean_plaintext_arr = []
+    for i in range(len(clean_plaintext)):
+        if valid_char(clean_plaintext[i]):
+            clean_cipher.append(clean_plaintext[i])
+
+    clean_plaintext = "".join(clean_cipher)
+
     # Corrige key, se necessario
-    builderKey = mendKey(key, len(plaintext))
+    # cria a chave do tamanho do texto sem caracteres especiais e números
+    builderKey = mendKey(key, len(clean_plaintext))
 
     ciphertext = []
+    key_it = 0
     for i in range(len(plaintext)):
         # ord() retorna a posicao na tabela ascii 
         # para cada posicao da string somamos o codigo ascii e fazemos % 26 
         # e somamos 65 = ord('A')
         # assim garantimos que o texto cifrado sempre vai estar dentro do alfabeto
         if valid_char(plaintext[i]):
-            builder = (ord(plaintext[i]) + ord(builderKey[i])) % 26
+            builder = (ord(plaintext[i]) + ord(builderKey[key_it])) % 26
             builder += ord('A')
             ciphertext.append(chr(builder))
+            key_it += 1
         else:
             ciphertext.append(plaintext[i])
 
     return("".join(ciphertext))
 
 def decipher(ciphertext, key):
-    builderKey = mendKey(key, len(ciphertext))
+    clean_cipher_arr = []
+    for i in range(len(ciphertext)):
+        if valid_char(ciphertext[i]):
+            clean_cipher_arr.append(ciphertext[i])
+
+    clean_ciphertext = "".join(clean_cipher_arr)
+
+    builderKey = mendKey(key, len(clean_ciphertext))
 
     plaintext = []
+    key_it = 0
     for i in range(len(ciphertext)):
         # O processo eh identico ao cifrador, apenas sendo necessario subtrair
         if valid_char(ciphertext[i]):
-            builder = (ord(ciphertext[i]) - ord(builderKey[i])) % 26
+            builder = (ord(ciphertext[i]) - ord(builderKey[key_it])) % 26
             builder += ord('A')
             plaintext.append(chr(builder))
+            key_it += 1
         else:
             plaintext.append(ciphertext[i])
     
@@ -152,15 +171,16 @@ class Attack():
         return sorted(keysizes.items(), key=lambda k: (k[1], k[0]), reverse=True)
 
     def run(self, ciphertext):
-        # clean_cipher = []
-        # for i in range(len(ciphertext)):
-        #     if ord(ciphertext[i]) >= ord('A') and ord(ciphertext[i]) <= ord('Z'):
-        #         clean_cipher.append(ciphertext[i])
+        clean_cipher = []
+        for i in range(len(ciphertext)):
+            if ord(ciphertext[i]) >= ord('A') and ord(ciphertext[i]) <= ord('Z'):
+                clean_cipher.append(ciphertext[i])
 
-        # ciphertext = "".join(clean_cipher)
+        ciphertext = "".join(clean_cipher)
+
         keysizes = self.get_keysizes(ciphertext)
         print(keysizes)
-        for ks in range(2):
+        for ks in range(3):
 
             # usar keysize para encontrar chave
             key_length, _ = keysizes[ks]
@@ -169,7 +189,7 @@ class Attack():
             divided = []
             for i in range(key_length):
                 divided.append('')
-                
+
             for i in range(len(ciphertext)):
                 divided[ i % key_length ] += ciphertext[i]
 
@@ -191,7 +211,11 @@ class Attack():
 
                 freq_by_column.append(freq)
 
-            # greatest in the alphabet
+            ####################################################################################################
+            # pegando o maior
+            ####################################################################################################
+
+            #greatest in the alphabet
             ga = max(self.alphabet, key=self.alphabet.get)
             for i in range(key_length):
                 col = freq_by_column[i]
@@ -206,7 +230,9 @@ class Attack():
 
                 print('')
 
+            ####################################################################################################
             # grafico
+            ####################################################################################################
 
             # labels = list(self.alphabet.keys())
             # values = list(self.alphabet.values())
@@ -215,7 +241,7 @@ class Attack():
             # x = np.arange(len(labels))
             # width = 0.2
 
-            # ag = ax.bar( x - width/2 , values, width=width, label='Português')
+            # ag = ax.bar( x - width/2 , values, width=width, label='English')
             # c0 = ax.bar( x + width/2 , list(freq_by_column[0].values()), width=width, label='Coluna 0' )
 
             # ax.set_ylabel('Porcentagem de ocorrência')
@@ -228,19 +254,21 @@ class Attack():
 
 
 def main():
-    print('======== Cifrador ========')
-    plaintext = input_file('input.txt') # input("Digite a mensagem a ser cifrada: ") 
-    print('Texto carregado de input.txt')
-    key = input("Agora digite a chave para cifrá-la: ").upper()
-    print(cipher(plaintext, key))
+    # print('======== Cifrador ========')
+    # plaintext = input_file('input_pt_full.txt') # input("Digite a mensagem a ser cifrada: ") 
+    # print('Texto carregado de input_pt_full.txt')
+    # key = input("Agora digite a chave para cifrá-la: ").upper()
+    # print(cipher(plaintext, key))
 
-    print('\n======== Decifrador ========')
-    ciphertext = cipher(plaintext, key)
+    # print('\n======== Decifrador ========')
+    # ciphertext = cipher(plaintext, key)
+    ciphertext = input_file('desafio2.txt')
+
+    atk = Attack('pt')
+    atk.run(ciphertext)
+
     key = input("Digite a chave: ").upper()
     print(decipher(ciphertext, key))
-
-    atk = Attack('en')
-    atk.run(ciphertext)
 
 if __name__ == "__main__":
     main()
