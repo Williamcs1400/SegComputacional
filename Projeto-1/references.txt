@@ -3,3 +3,4 @@ https://en.wikipedia.org/wiki/Index_of_coincidence
 https://medium.com/asecuritysite-when-bob-met-alice/for-the-love-of-ciphers-vigen%C3%A8re-cipher-cracking-691d2a6effb1
 https://pages.mtu.edu/~shene/NSF-4/Tutorial/VIG/Vig-IOC.html
 http://www.brianveitch.com/maze-runner/frequency-analysis-vigenere/
+https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher

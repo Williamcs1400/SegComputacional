@@ -73,7 +73,13 @@ class Attack:
         return expected_ic
 
     def run(self, ciphertext):
-        #ciphertext = "".join(ciphertext.split(" "))
+        clean_cipher = []
+        for i in range(len(ciphertext)):
+            if ord(ciphertext[i]) >= ord('A') and ord(ciphertext[i]) <= ord('Z'):
+                clean_cipher.append(ciphertext[i])
+
+        ciphertext = "".join(clean_cipher)
+
         candidate_lengths = {}
         avgs = {}
 
@@ -136,7 +142,7 @@ def main():
 
     ciphertext = input_file('desafio1.txt')
 
-    atk = Attack(lang='pt')
+    atk = Attack(lang='en')
     atk.run(ciphertext)
 
 if __name__ == "__main__":
