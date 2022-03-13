@@ -10,11 +10,11 @@ def valid_char(char):
 
 def cipher(plaintext, key):
     clean_plaintext_arr = []
-    for i in range(len(clean_plaintext)):
-        if valid_char(clean_plaintext[i]):
-            clean_cipher.append(clean_plaintext[i])
+    for i in range(len(plaintext)):
+        if valid_char(plaintext[i]):
+            clean_plaintext_arr.append(plaintext[i])
 
-    clean_plaintext = "".join(clean_cipher)
+    clean_plaintext = "".join(clean_plaintext_arr)
 
     # Corrige key, se necessario
     # cria a chave do tamanho do texto sem caracteres especiais e números
@@ -255,8 +255,9 @@ class Attack():
 
 def main():
     # print('======== Cifrador ========')
-    # plaintext = input_file('input_pt_full.txt') # input("Digite a mensagem a ser cifrada: ") 
+    # plaintext = input_file('input_pt_full.txt')
     # print('Texto carregado de input_pt_full.txt')
+    # plaintext = input("Digite a mensagem a ser cifrada: ").upper()
     # key = input("Agora digite a chave para cifrá-la: ").upper()
     # print(cipher(plaintext, key))
 
@@ -264,7 +265,7 @@ def main():
     # ciphertext = cipher(plaintext, key)
     ciphertext = input_file('desafio2.txt')
 
-    atk = Attack('pt')
+    atk = Attack('en')
     atk.run(ciphertext)
 
     key = input("Digite a chave: ").upper()
