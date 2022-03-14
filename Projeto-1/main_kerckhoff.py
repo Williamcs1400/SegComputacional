@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 def input_file(file):
     f = open(file, 'r', encoding='utf8')
@@ -84,7 +84,7 @@ class Attack():
     # carrega do arquivo txt a frequencia de cada letra no alfabeto escolhido
     def letter_freq_alphabet(self):
         alphabet = {}
-        name = 'frequencyEN.txt' if self.lang == 'en' else 'frequencyPT.txt'
+        name = 'resources/frequencyEN.txt' if self.lang == 'en' else 'resources/frequencyPT.txt'
         with open(name, 'r') as file:
             for line in file:
                 letter, freq = line[:-1].split(" ")
@@ -173,18 +173,17 @@ class Attack():
     def run(self, ciphertext):
         clean_cipher = []
         for i in range(len(ciphertext)):
-            if ord(ciphertext[i]) >= ord('A') and ord(ciphertext[i]) <= ord('Z'):
+            if valid_char(ciphertext[i]):
                 clean_cipher.append(ciphertext[i])
 
         ciphertext = "".join(clean_cipher)
 
         keysizes = self.get_keysizes(ciphertext)
-        print(keysizes)
+        print("(tamanho de chave, qtd ocorrencias): ", keysizes)
         for ks in range(3):
-
             # usar keysize para encontrar chave
             key_length, _ = keysizes[ks]
-            print("Key size: ", key_length)
+            print("Tamanho de chave: ", key_length)
 
             divided = []
             for i in range(key_length):
@@ -221,7 +220,7 @@ class Attack():
                 col = freq_by_column[i]
                 ordered = sorted(col.items(), key=lambda k: k[1], reverse=True)
 
-                for j in range(3):
+                for j in range(4):
                     k, _ = ordered[j]
                     if ord(k) >= ord(ga):
                         print( chr(ord(k) - ord(ga) + ord('A')) , end=' ')
@@ -254,22 +253,37 @@ class Attack():
 
 
 def main():
-    # print('======== Cifrador ========')
-    # plaintext = input_file('input_pt_full.txt')
-    # print('Texto carregado de input_pt_full.txt')
-    # plaintext = input("Digite a mensagem a ser cifrada: ").upper()
-    # key = input("Agora digite a chave para cifrá-la: ").upper()
-    # print(cipher(plaintext, key))
+    print("======== Cifra de Vigenere ========")
+    mode = 1
+    while mode:
+        mode = int(input("\nEscolha um modo: \n1. Ataque desafio 1\n2. Ataque desafio 2\n3. Cifrador\n4. Decifrador\n0. Sair\n"))
+        if mode == 1:
+            ciphertext = input_file("desafio1.txt")
 
-    # print('\n======== Decifrador ========')
-    # ciphertext = cipher(plaintext, key)
-    ciphertext = input_file('desafio2.txt')
+            atk = Attack('en')
+            atk.run(ciphertext)
 
-    atk = Attack('en')
-    atk.run(ciphertext)
+            key = input("Digite a chave: ").upper()
+            print(decipher(ciphertext, key))
+        elif mode == 2:
+            ciphertext = input_file('desafio2.txt')
 
-    key = input("Digite a chave: ").upper()
-    print(decipher(ciphertext, key))
+            atk = Attack('pt')
+            atk.run(ciphertext)
+
+            key = input("Digite a chave: ").upper()
+            print(decipher(ciphertext, key))
+        elif mode == 3:
+            print('======== Cifrador ========')
+            plaintext = input("Digite a mensagem a ser cifrada: ").upper()
+            key = input("Agora digite a chave para cifrá-la: ").upper()
+            print(cipher(plaintext, key))
+        elif mode == 4:
+            print('\n======== Decifrador ========')
+            ciphertext = input("Digite a mensagem a ser decifrada: ").upper()
+            key = input("Digite a chave: ").upper()
+            print(decipher(ciphertext, key))
+                
 
 if __name__ == "__main__":
     main()
