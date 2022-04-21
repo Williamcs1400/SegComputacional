@@ -1,4 +1,3 @@
-from logging import exception
 import os
 import numpy as np
 from const import s_box, g_mul2, g_mul3, r_con
@@ -6,7 +5,7 @@ from pprint import pprint
 
 class SymKey:
   @staticmethod
-  def generate(bits: int = 256):
+  def generate(bits = 256):
     return os.urandom(bits // 8)
 
 class AES_Util:
@@ -47,7 +46,7 @@ class AES_Util:
     for i in range(4):
       for j in range(4):
         state[i][j] = s_box[state[i][j]]
-  
+
   # Transformacao ShiftRows FIPS197 5.1.2
   @staticmethod
   def shift_rows(state):
@@ -70,6 +69,21 @@ class AES_Util:
     for i in range(4):
       for j in range(4):
        state[i][j] ^= key[i][j]
+
+  # Transformacao InvShiftRows FIPS197 5.3.1
+  @staticmethod
+  def inv_shift_rows(state):
+    pass
+
+  # Transformacao InvSubBytes FIPS197 5.3.2
+  @staticmethod
+  def inv_sub_bytes(state):
+    pass
+
+  # Transformacao InvMixColumns FIPS197 5.3.3
+  @staticmethod
+  def inv_mix_columns(state):
+    pass
 
 class AES:
   def __init__(self, key):
@@ -110,8 +124,8 @@ class AES:
 
     return res
 
-  # Cipher algorithm, FIPS197 5.1
-  def cipher(self, message: str):
+  # Algoritmo de cifra (Cipher), FIPS197 5.1
+  def cipher(self, message):
     if len(message) != 16:
       raise Exception("Bloco precisa de 16 digitos")
 
@@ -135,11 +149,16 @@ class AES:
 
     return AES_Util.matrix_to_bytes(state)
 
+  # Algoritmo da cifra inversa, FIPS197 5.3
+  def inv_cipher(self, ciphertext):
+    pass
 
-  def encrypt(self, message: str):
+  # Realiza encriptacao no modo CTR
+  def encrypt(self, message):
     return ""
 
-  def decrypt(self, ciphertext: str):
+  # Realiza desencriptacao no modo CTR
+  def decrypt(self, ciphertext):
     return ""
 
   

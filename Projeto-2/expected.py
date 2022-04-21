@@ -37,11 +37,13 @@ class AES:
     return get_random_bytes(16)
   
   def Encrypt(self, message, key):
-    obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
+    #obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
+    obj = LibAES.new(key, LibAES.MODE_ECB)
     return obj.encrypt(message)
 
   def Decrypt(self, ciphertext, key):
-    obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
+    #obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
+    obj = LibAES.new(key, LibAES.MODE_ECB)
     return obj.decrypt(ciphertext)
 
 
@@ -117,4 +119,10 @@ def main():
   rc.receive(formatted_hash, formatted_enc_message, formatted_enc_session_key, tr.public_key)
 
 if __name__ == "__main__":
-  main()
+  #main()
+  aes = AES()
+
+  key = "aesEncryptionKey".encode()
+  msg = "1234567890123456".encode()
+
+  print(aes.Encrypt(msg, key).hex())

@@ -1,0 +1,5 @@
+https://crypto.stackexchange.com/questions/44648/implement-aes-ctr-on-top-of-aes-ecb
+https://www.highgo.ca/2019/08/08/the-difference-in-five-modes-in-the-aes-encryption-algorithm/
+https://csrc.nist.gov/csrc/media/publications/fips/197/final/documents/fips-197.pdf
+https://github.com/nindalf/crypto/tree/master/aes -- https://blog.nindalf.com/posts/implementing-aes/
+https://github.com/boppreh/aes
