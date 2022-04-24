@@ -1,6 +1,8 @@
 # Segurança Computacional - UnB
 from asymmetric import RSA, AsymKey
 
+import base64
+
 def main():
     asym_keygen = AsymKey()
     publicKey, privateKey = asym_keygen.generate()
@@ -14,11 +16,11 @@ def main():
     message = "hello"
     
     rsa = RSA()
-    cipherText = rsa.encrypt(message, privateKey)
-    print('\nTexto cifrado: ', cipherText)
+    cipherText = rsa.encrypt(message, publicKey)
+    print('\nTexto cifrado: ', base64.b64encode(cipherText))
 
     # Decriptar
-    decryptedText = rsa.decrypt(cipherText, publicKey)
+    decryptedText = rsa.decrypt(cipherText, privateKey)
     print('\nTexto decifrado: ', decryptedText)
       
 if __name__ == '__main__':

@@ -35,7 +35,12 @@ class Receiver:
 
     print("Mensagem recebida:", message.decode())
     print("Hash calculado:", calc_msg_hash)
-    print("Hash recebido:", rcv_msg_hash.decode())
+    print("Hash recebido:", rcv_msg_hash.decode(), end="\n\n")
+
+    if calc_msg_hash == rcv_msg_hash.decode():
+      print("Hashs identicos. Mensagem recebida corretamente")
+    else:
+      print("Hashs distintos. Falha na transmissao da mensagem")
 
 class Transmitter:
   def __init__(self):
