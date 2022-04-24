@@ -10,7 +10,7 @@ class SymKey:
 class AES_Util:
   # Conta a quantidade de rounds a partir do tamanho da chave (em bytes)
   @staticmethod
-  def count_rounds(key_length):
+  def count_rounds(key_length: int):
     if key_length == 16:
       return 10
     elif key_length == 24:
@@ -97,11 +97,10 @@ class AES_Util:
 
   @staticmethod
   def generate_counter():
-    start = 1
-    return start.to_bytes(16, 'big')
+    return int.to_bytes(1, 16, 'big')
 
   @staticmethod
-  def increment_byte(original):
+  def increment_byte(original: bytes):
     num = int.from_bytes(original, 'big') + 1
     return num.to_bytes(16, 'big')
 
@@ -173,7 +172,7 @@ class AES:
     return AES_Util.matrix_to_bytes(state)
 
   # Realiza encriptacao no modo CTR
-  def encrypt(self, message, iv = None):
+  def encrypt(self, message, iv: bytes = None) -> bytes:
     if type(message) is str:
       message = message.encode()
 
@@ -194,7 +193,7 @@ class AES:
     return b''.join(encrypted)
 
   # Realiza desencriptacao no modo CTR
-  def decrypt(self, ciphertext, iv = None):
+  def decrypt(self, ciphertext, iv: bytes = None) -> bytes:
     if type(ciphertext) is str:
       ciphertext = ciphertext.encode()
 
