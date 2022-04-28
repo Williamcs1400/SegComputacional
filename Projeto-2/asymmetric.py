@@ -1,4 +1,8 @@
 import random
+from math import ceil
+import hashlib as hl
+import os
+import base64
 
 class AsymKey:
   def __init__(self, bits = 1024):
@@ -119,3 +123,170 @@ class RSA:
     for num in cipherText:
         plainText.append(chr(pow(num,key,n)))
     return ''.join(plainText)
+
+class OAEP:
+    def __init__(self):
+        # definição de e
+        self.e = 0x010001
+        self.hlen = len(self.sha3(b''))
+
+    # https://pt.wikipedia.org/wiki/Algoritmo_de_Euclides
+    def euclid(self, a, b):
+        while b != 0:
+            a, b = b, a % b
+        return a
+
+    # https://pt.wikipedia.org/wiki/Algoritmo_de_Euclides_estendido
+    def extend_euclid(self, a, b):
+        if b == 0:
+            return 1, 0, a
+        else:
+            x, y, q = self.extend_euclid(b, a % b)
+            return y, x - (a // b) * y, q
+
+    # inverso multiplicativo modular
+    def modinv(self, a, b):
+        x, y, q = self.extend_euclid(a, b)
+        if q != 1:
+            return None
+        else:
+            return x % b
+
+    # Gera chaves publicas e privadas
+    def generateKeys(self):
+        # Podemos usar a ja implementada de AsymKey
+        key = AsymKey()
+        p = key.generateRandomPrime()
+        q = key.generateRandomPrime()
+
+        # Calculo das chaves publicas e privadas
+        n = p * q
+        phi = (p - 1) * (q - 1)
+        if self.e != None:
+            assert self.euclid(phi, self.e) == 1
+        else:
+            while True:
+                self.e = random.randrange(1, phi)
+                if self.euclid(self.e, phi) == 1:
+                    break
+        d = self.modinv(self.e, phi)
+        return ((self.e, n), (d, n))
+
+    # Converte um inteiro nao negativo em byteArray
+    def i2osp(self, num, length):
+        return num.to_bytes(length, "big")
+    
+    # Converte um byteArray em inteiro
+    def os2ip(self, num):
+        return int.from_bytes(num, byteorder='big')
+
+    # Encripta uma mensagem com sha3
+    def sha3(self, message):
+        hasher = hl.sha3_512()
+        hasher.update(message)
+        return hasher.digest()
+
+    # Gera assinatura da mensagem com sha3 - byteArray
+    def createSignature(self, message, privateKey):
+        e, n = privateKey
+        return self.i2osp(pow(self.os2ip(self.sha3(message.encode("utf-8"))), e, n),256)
+
+    # Gera mascara que sera usada para encriptar em OAEP
+    # https://en.wikipedia.org/wiki/Mask_generation_function
+    def mgf(self, z, l):
+        assert l < (2**32)
+        result = b""
+
+        for i in range(ceil(l / self.hlen)):
+            C = self.i2osp(i, 4)
+            result += self.sha3(z + C)
+        return result[:l]
+
+    # Aplica mascara com um xor bit a bit
+    def bitwiseXor(self, data, mask):
+        masked = b''
+        ldata = len(data)
+        lmask = len(mask)
+        for i in range(max(ldata, lmask)):
+            if i < ldata and i < lmask:
+                masked += (data[i] ^ mask[i]).to_bytes(1, byteorder='big')
+            elif i < ldata:
+                masked += data[i].to_bytes(1, byteorder='big')
+            else:
+                break
+        return masked
+
+    # Implementação do OAEP
+    # https://stringfixer.com/pt/RSA-OAEP
+    def oaepEncode(self, m, k, label=b''):
+        mlen = len(m)
+        lhash = self.sha3(label)
+        ps = b'\x00' * (k - mlen - 2 * self.hlen - 2) # padding
+        db = lhash + ps + b'\x01' + m 
+        seed = os.urandom(self.hlen) # gerar seed aleatorio para encriptar
+        DBmask = self.mgf(seed, k - self.hlen - 1) # gerar mascara
+        maskedDB = self.bitwiseXor(db, DBmask)
+        seedMask = self.mgf(maskedDB, self.hlen)
+        maskedSeed = self.bitwiseXor(seed, seedMask)
+        return b'\x00' + maskedSeed + maskedDB # retorna o bytearray
+
+    # Encripta uma mensagem com RSA - OAEP
+    def encryptRsaOaep(self, message, publicKey):
+        k = ceil((publicKey[1]).bit_length() / 8)
+
+        assert len(message) <= k - self.hlen - 2
+        
+        e, n = publicKey
+        c = self.oaepEncode(message, k)
+        c = pow(self.os2ip(c), e, n)
+
+        return self.i2osp(c, k)
+    
+    # Aplicacao do algoritmo OAEP
+    # https://stringfixer.com/pt/RSA-OAEP
+    def oaepDecode(self, cipher, k, label=b''):
+        lhash = self.sha3(label) # hash da label
+        maskedSeed, maskedDB = cipher[1:1 + self.hlen], cipher[1 + self.hlen:] # pega os bytes do seed e do DB
+        seedMask = self.mgf(maskedDB, self.hlen) # gera a mascara do seed
+        seed = self.bitwiseXor(maskedSeed, seedMask) # aplica a mascara no seed xor bit a bit
+        DBmask = self.mgf(seed, k - self.hlen - 1) # gera a mascara do DB
+        db = self.bitwiseXor(maskedDB, DBmask) # aplica a mascara no DB xor bit a bit
+        _lhash = db[:self.hlen] # pega o hash da label
+        assert lhash == _lhash
+        i = self.hlen # tamanho do hash
+
+        while i < len(db):
+            if db[i] == 0:
+                i += 1
+                continue
+            elif db[i] == 1:
+                i += 1
+                break
+            else:
+                raise Exception()
+        m = db[i:]
+        return m
+
+    # Decripta uma mensagem com RSA - OAEP padding
+    def decryptRsaOaep(self, cipher, privateKey):
+        k = ceil((privateKey[1]).bit_length() / 8) # trunca o tamanho da chave
+        assert len(cipher) == k
+        assert k >= 2 * self.hlen + 2
+
+        d, n = privateKey
+        m = pow(self.os2ip(cipher), d, n)
+        m = self.i2osp(m, k)
+
+        return self.oaepDecode(m, k)
+
+    # Decripta uma mensagem com RSA - OAEP
+    def decryptMessage(self, signature, encryptedMessage, publicKey, privateKey):
+        d, n = publicKey
+        decrypted_message = self.decryptRsaOaep(encryptedMessage, privateKey)
+        
+        s = self.i2osp(pow(self.os2ip(signature), d, n),64)
+
+        if(s == self.sha3(decrypted_message)):
+            return decrypted_message.decode("utf-8")
+        else:
+            return "Erro na decriptacao"
