@@ -3,7 +3,6 @@ from symmetric import AES, SymKey
 from asymmetric import RSA, AsymKey, OAEP
 import base64
 import hashlib
-import base64
 
 class Receiver:
   def __init__(self):
@@ -77,36 +76,39 @@ class Transmitter:
     return msg_hash, msg_ciphertext, key_ciphertext
 
 def main():
-  with open("message.txt", "r") as f:
-    message = f.read().encode()
+    with open("message.txt", "r") as f:
+        message = f.read().encode()
 
-  tr = Transmitter()
-  rc = Receiver()
+    tr = Transmitter()
+    rc = Receiver()
 
-  print("Chaves geradas\n")
+    print("Chaves geradas\n")
 
-  msg_hash, msg_ciphertext, key_ciphertext = tr.transmit(message, rc.public_key)
+    msg_hash, msg_ciphertext, key_ciphertext = tr.transmit(message, rc.public_key)
 
-  rc.receive(msg_hash, msg_ciphertext, key_ciphertext, tr.public_key)
+    rc.receive(msg_hash, msg_ciphertext, key_ciphertext, tr.public_key)
 
-print('\n\n--------------------------------------')
-print('Cifração assimética OAEP')
+    print('\n\n--------------------------------------')
+    print('Cifração assimética OAEP')
 
-oaep = OAEP()
-publicKey, privateKey = oaep.generateKeys()
-print('Chaves publicas: ', publicKey)
-print('Chaves privadas: ', privateKey)
+    with open("message.txt", "r") as f:
+        message = f.read()
 
-s = oaep.createSignature(message, privateKey)
-enc = oaep.encryptRsaOaep(message.encode('utf-8'), publicKey)
-base64EncodedStr = base64.b64encode(enc)
-base64EncodedStrS = base64.b64encode(s)
-print('\nTexto cifrado em base64: ', base64EncodedStr.decode('utf-8'))
-print('\nAssinatura em base64: ', base64EncodedStrS.decode('utf-8'))
+    oaep = OAEP()
+    publicKey, privateKey = oaep.generateKeys()
+    print('Chaves publicas: ', publicKey)
+    print('Chaves privadas: ', privateKey)
 
-# Decriptar
-decryptedText = oaep.decryptMessage(s, enc, publicKey, privateKey)
-print('\n\nTexto decifrado: ', decryptedText)
-print('\n\n')
+    s = oaep.createSignature(message, privateKey)
+    enc = oaep.encryptRsaOaep(message.encode('utf-8'), publicKey)
+    base64EncodedStr = base64.b64encode(enc)
+    base64EncodedStrS = base64.b64encode(s)
+    print('\nTexto cifrado em base64: ', base64EncodedStr.decode('utf-8'))
+    print('\nAssinatura em base64: ', base64EncodedStrS.decode('utf-8'))
+
+    # Decriptar
+    decryptedText = oaep.decryptMessage(s, enc, publicKey, privateKey)
+    print('\n\nTexto decifrado: ', decryptedText)
+    print('\n\n')
 if __name__ == "__main__":
   main()
