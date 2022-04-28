@@ -37,13 +37,13 @@ class AES:
     return get_random_bytes(16)
   
   def Encrypt(self, message, key):
-    #obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
-    obj = LibAES.new(key, LibAES.MODE_ECB)
+    obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
+    #obj = LibAES.new(key, LibAES.MODE_ECB)
     return obj.encrypt(message)
 
   def Decrypt(self, ciphertext, key):
-    #obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
-    obj = LibAES.new(key, LibAES.MODE_ECB)
+    obj = LibAES.new(key, LibAES.MODE_CTR, counter=LibCounter.new(128))
+    #obj = LibAES.new(key, LibAES.MODE_ECB)
     return obj.decrypt(ciphertext)
 
 
@@ -123,6 +123,6 @@ if __name__ == "__main__":
   aes = AES()
 
   key = "aesEncryptionKey".encode()
-  msg = "1234567890123456".encode()
+  msg = "HELLO DARKNESS MY OLD FRIEND, I'VE COME TO TALK WITH YOU AGAIN".encode()
 
   print(aes.Encrypt(msg, key).hex())

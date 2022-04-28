@@ -3,12 +3,13 @@ from math import ceil
 import hashlib as hl
 import os
 import base64
+from typing import Tuple
 
 class AsymKey:
   def __init__(self, bits = 1024):
     self.bits = bits
 
-  def generateRandomPrime(self):
+  def generateRandomPrime(self) -> int:
     while(True):
         # faz OR com 0x01 (1 no bit menos significativo) 
         #           para garantir que eh um número impar
@@ -21,7 +22,7 @@ class AsymKey:
   # verifica se um numero eh primo
   # utilizando o teste de miller-rabin
   # https://medium.com/@prudywsh/how-to-generate-big-prime-numbers-miller-rabin-49e6e6af32fb
-  def isPrime(self, number):
+  def isPrime(self, number: int) -> bool:
       if number == 2 or number == 3:
           return True
 
@@ -53,7 +54,7 @@ class AsymKey:
   # inverso multiplicativo modular
   # utilizando algoritmo de euclides estendido
   # https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-  def modInverse(self, a, b):
+  def modInverse(self, a: int, b: int) -> int:
       t, newt = 0, 1
       r, newr = b, a
 
@@ -68,13 +69,13 @@ class AsymKey:
       return t
 
   # calcular mdc
-  def mdc(self, a, b): 
+  def mdc(self, a: int, b: int) -> int:
       while b != 0:
           a, b = b, a % b
       return a
 
   # Gerar chaves privadas com e phi e n
-  def generatePrivateKey(self, e, phi, n):
+  def generatePrivateKey(self, e: int, phi: int, n: int) -> Tuple[int, int]:
       d = self.modInverse(e, phi)
       
       # faz d ser positivo
@@ -101,28 +102,45 @@ class AsymKey:
     # Gerar chaves
     publicKey = (e,n)
     privateKey = self.generatePrivateKey(e, phi, n)
+
     return (publicKey, privateKey)
 
 class RSA:
   def __init__(self):
     pass
 
-  def encrypt(self, plainText, publicKey):
+  def encrypt(self, plainText, publicKey: Tuple[int, int]) -> bytes:
     # Separa o par em variaveis
     key, n = publicKey
 
-    # Converte o texto para lista de numeros
-    cipherText = []
-    for char in plainText:
-        cipherText.append(pow(ord(char),key,n))
-    return cipherText
+    # Verifica se o plainText eh um array de bytes
+    if type(plainText) is str:
+        plainText = plainText.encode()
 
-  def decrypt(self, cipherText, privateKey):
+    # Converte para inteiro e faz a exponenciacao
+    if type(plainText) is bytes:
+        plainText = int.from_bytes(plainText, 'big')
+
+    exp = pow(plainText, key, n)
+
+    # Retorna como array de bytes
+    return exp.to_bytes((exp.bit_length() + 7) // 8, 'big')
+
+  def decrypt(self, cipherText, privateKey: Tuple[int, int]) -> bytes:
+    # Separa o par em variaveis
     key, n = privateKey
-    plainText = []
-    for num in cipherText:
-        plainText.append(chr(pow(num,key,n)))
-    return ''.join(plainText)
+
+    # Verifica se o cipherText eh um array de bytes
+    if type(cipherText) is str:
+        cipherText = cipherText.encode()
+
+    # Converte para inteiro e faz a exponenciacao
+    if type(cipherText) is bytes:
+        cipherText = int.from_bytes(cipherText, 'big')
+
+    exp = pow(cipherText, key, n)
+
+    return exp.to_bytes((exp.bit_length() + 7) // 8, 'big')
 
 class OAEP:
     def __init__(self):
@@ -175,7 +193,7 @@ class OAEP:
     # Converte um inteiro nao negativo em byteArray
     def i2osp(self, num, length):
         return num.to_bytes(length, "big")
-    
+
     # Converte um byteArray em inteiro
     def os2ip(self, num):
         return int.from_bytes(num, byteorder='big')
@@ -222,7 +240,7 @@ class OAEP:
         mlen = len(m)
         lhash = self.sha3(label)
         ps = b'\x00' * (k - mlen - 2 * self.hlen - 2) # padding
-        db = lhash + ps + b'\x01' + m 
+        db = lhash + ps + b'\x01' + m
         seed = os.urandom(self.hlen) # gerar seed aleatorio para encriptar
         DBmask = self.mgf(seed, k - self.hlen - 1) # gerar mascara
         maskedDB = self.bitwiseXor(db, DBmask)
@@ -235,13 +253,13 @@ class OAEP:
         k = ceil((publicKey[1]).bit_length() / 8)
 
         assert len(message) <= k - self.hlen - 2
-        
+
         e, n = publicKey
         c = self.oaepEncode(message, k)
         c = pow(self.os2ip(c), e, n)
 
         return self.i2osp(c, k)
-    
+
     # Aplicacao do algoritmo OAEP
     # https://stringfixer.com/pt/RSA-OAEP
     def oaepDecode(self, cipher, k, label=b''):
@@ -283,7 +301,7 @@ class OAEP:
     def decryptMessage(self, signature, encryptedMessage, publicKey, privateKey):
         d, n = publicKey
         decrypted_message = self.decryptRsaOaep(encryptedMessage, privateKey)
-        
+
         s = self.i2osp(pow(self.os2ip(signature), d, n),64)
 
         if(s == self.sha3(decrypted_message)):

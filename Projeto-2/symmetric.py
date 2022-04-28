@@ -1,22 +1,21 @@
 import os
 import numpy as np
-from const import s_box, g_mul2, g_mul3, r_con
-from pprint import pprint
+from const import s_box, inv_s_box, r_con, g_mul2, g_mul3, g_mul9, g_mul11, g_mul13, g_mul14, aes_key_sizes
 
 class SymKey:
   @staticmethod
-  def generate(bits = 256):
+  def generate(bits = 128):
     return os.urandom(bits // 8)
 
 class AES_Util:
-  # conta a quantidade de rounds a partir do tamanho da chave (em bits)
+  # Conta a quantidade de rounds a partir do tamanho da chave (em bytes)
   @staticmethod
-  def count_rounds(key_length):
-    if key_length == 128:
+  def count_rounds(key_length: int):
+    if key_length == 16:
       return 10
-    elif key_length == 192:
+    elif key_length == 24:
       return 12
-    elif key_length == 256:
+    elif key_length == 32:
       return 14
 
   # transforma o array de input num array de estado (state)
@@ -30,7 +29,6 @@ class AES_Util:
     return matrix
 
   # transforma o array de estado (state) num array de output
-  # output eh uma string
   @staticmethod
   def matrix_to_bytes(matrix):
     bytearr = []
@@ -73,25 +71,50 @@ class AES_Util:
   # Transformacao InvShiftRows FIPS197 5.3.1
   @staticmethod
   def inv_shift_rows(state):
-    pass
+    for i in range(1,4):
+      state[i] = list(np.roll(state[i], i))
 
   # Transformacao InvSubBytes FIPS197 5.3.2
   @staticmethod
   def inv_sub_bytes(state):
-    pass
+    for i in range(4):
+      for j in range(4):
+        state[i][j] = inv_s_box[state[i][j]]
 
   # Transformacao InvMixColumns FIPS197 5.3.3
   @staticmethod
   def inv_mix_columns(state):
-    pass
+    for i in range(4):
+      a0, a1, a2, a3 = state[0][i], state[1][i], state[2][i], state[3][i]
+      state[0][i] = g_mul14[a0] ^ g_mul11[a1] ^ g_mul13[a2] ^ g_mul9[a3]
+      state[1][i] = g_mul9[a0] ^ g_mul14[a1] ^ g_mul11[a2] ^ g_mul13[a3]
+      state[2][i] = g_mul13[a0] ^ g_mul9[a1] ^ g_mul14[a2] ^ g_mul11[a3]
+      state[3][i] = g_mul11[a0] ^ g_mul13[a1] ^ g_mul9[a2] ^ g_mul14[a3]
+
+  @staticmethod
+  def zip_xor(a, b):
+    return bytes(i^j for i,j in zip(a, b))
+
+  @staticmethod
+  def generate_counter():
+    return int.to_bytes(1, 16, 'big')
+
+  @staticmethod
+  def increment_byte(original: bytes):
+    num = int.from_bytes(original, 'big') + 1
+    return num.to_bytes(16, 'big')
 
 class AES:
   def __init__(self, key):
     if type(key) is str:
       key = key.encode()
+
+    key_size = len(key)
+    if key_size not in aes_key_sizes:
+      raise Exception("Key size of {} bytes not in AES standard".format(key_size))
     
     self.key = key
-    self.rounds = AES_Util.count_rounds(len(key) * 8)
+    self.rounds = AES_Util.count_rounds(key_size)
     self.exp_keys = self.__expanded_keys()
 
   # Expansao de chave FIPS197 5.2
@@ -111,7 +134,7 @@ class AES:
       elif len(self.key) == 32 and len(key_cols) % it_size == 4:
         w = [s_box[b] for b in w]
 
-      w = bytes(i^j for i,j in zip(w, key_cols[-it_size]))
+      w = AES_Util.zip_xor(w, key_cols[-it_size])
       key_cols.append(w)
 
     res = [key_cols[4*i : 4*(i+1)] for i in range(len(key_cols) // 4)]
@@ -142,23 +165,50 @@ class AES:
       AES_Util.mix_columns(state)
       AES_Util.add_round_key(state, self.exp_keys[i])
 
-
     AES_Util.sub_bytes(state)
     AES_Util.shift_rows(state)
     AES_Util.add_round_key(state, self.exp_keys[-1])
 
     return AES_Util.matrix_to_bytes(state)
 
-  # Algoritmo da cifra inversa, FIPS197 5.3
-  def inv_cipher(self, ciphertext):
-    pass
-
   # Realiza encriptacao no modo CTR
-  def encrypt(self, message):
-    return ""
+  def encrypt(self, message, iv: bytes = None) -> bytes:
+    if type(message) is str:
+      message = message.encode()
+
+    message_blocks = [message[i:i+16] for i in range(0, len(message), 16)]
+
+    # gera counter (iniciado em 1 por padrao)
+    # se initialization vector nao for fornecido
+    if iv:
+      counter = iv
+    else:
+      counter = AES_Util.generate_counter()
+
+    encrypted = []
+    for block in message_blocks:
+      encrypted.append(AES_Util.zip_xor(block, self.cipher(counter)))
+      counter = AES_Util.increment_byte(counter)
+
+    return b''.join(encrypted)
 
   # Realiza desencriptacao no modo CTR
-  def decrypt(self, ciphertext):
-    return ""
+  def decrypt(self, ciphertext, iv: bytes = None) -> bytes:
+    if type(ciphertext) is str:
+      ciphertext = ciphertext.encode()
 
-  
+    ciphertext_blocks = [ciphertext[i:i+16] for i in range(0, len(ciphertext), 16)]
+
+    # gera counter (iniciado em 1 por padrao)
+    # se initialization vector nao for fornecido
+    if iv:
+      counter = iv
+    else:
+      counter = AES_Util.generate_counter()
+
+    decrypted = []
+    for block in ciphertext_blocks:
+      decrypted.append(AES_Util.zip_xor(block, self.cipher(counter)))
+      counter = AES_Util.increment_byte(counter)
+
+    return b''.join(decrypted)
