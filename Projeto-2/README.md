@@ -2,7 +2,7 @@
 
 O executável se encontra em:
 
-  dist/main_kerckhoff/main_kerckhoff.exe
+  dist/main/main.exe
 
 O código também pode ser executado em qualquer máquina com o Python 3 instalado.
 
