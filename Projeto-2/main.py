@@ -17,6 +17,7 @@ class Receiver:
   #   - src_public_key : Chave publica do encriptador
   def receive(self, msg_hash, msg_ciphertext, key_ciphertext, src_public_key):
     rsa = RSA()
+    oaep = OAEP()
 
     # 3. a
     msg_hash = base64.b64decode(msg_hash)
@@ -24,7 +25,7 @@ class Receiver:
     key_ciphertext = base64.b64decode(key_ciphertext)
 
     # decifrar chave de sessao
-    session_key = rsa.decrypt(key_ciphertext, self._private_key)
+    session_key = oaep.decryptRsaOaep(key_ciphertext, self._private_key)
     aes = AES(session_key)
 
     # 3. b
@@ -53,12 +54,13 @@ class Transmitter:
     session_key = SymKey.generate(128)
     aes = AES(session_key)
     rsa = RSA()
+    oaep = OAEP()
 
     # 1.c
     encripted_message = aes.encrypt(message)
 
-    # 1.d - cifrar a chave de sessao usada no AES com a chave *publica*
-    encripted_session_key = rsa.encrypt(session_key, dest_public_key)
+    # 1.d - cifrar a chave de sessao usada no AES com a chave *publica*, com OAEP
+    encripted_session_key = oaep.encryptRsaOaep(session_key, dest_public_key)
 
     ########### Assinatura
 
@@ -76,39 +78,17 @@ class Transmitter:
     return msg_hash, msg_ciphertext, key_ciphertext
 
 def main():
-    with open("message.txt", "r") as f:
-        message = f.read().encode()
+  with open("message.txt", "r") as f:
+      message = f.read().encode()
 
-    tr = Transmitter()
-    rc = Receiver()
+  tr = Transmitter()
+  rc = Receiver()
 
-    print("Chaves geradas\n")
+  print("Chaves geradas\n")
 
-    msg_hash, msg_ciphertext, key_ciphertext = tr.transmit(message, rc.public_key)
+  msg_hash, msg_ciphertext, key_ciphertext = tr.transmit(message, rc.public_key)
 
-    rc.receive(msg_hash, msg_ciphertext, key_ciphertext, tr.public_key)
+  rc.receive(msg_hash, msg_ciphertext, key_ciphertext, tr.public_key)
 
-    print('\n\n--------------------------------------')
-    print('Cifração assimética OAEP')
-
-    with open("message.txt", "r") as f:
-        message = f.read()
-
-    oaep = OAEP()
-    publicKey, privateKey = oaep.generateKeys()
-    print('Chaves publicas: ', publicKey)
-    print('Chaves privadas: ', privateKey)
-
-    s = oaep.createSignature(message, privateKey)
-    enc = oaep.encryptRsaOaep(message.encode('utf-8'), publicKey)
-    base64EncodedStr = base64.b64encode(enc)
-    base64EncodedStrS = base64.b64encode(s)
-    print('\nTexto cifrado em base64: ', base64EncodedStr.decode('utf-8'))
-    print('\nAssinatura em base64: ', base64EncodedStrS.decode('utf-8'))
-
-    # Decriptar
-    decryptedText = oaep.decryptMessage(s, enc, publicKey, privateKey)
-    print('\n\nTexto decifrado: ', decryptedText)
-    print('\n\n')
 if __name__ == "__main__":
   main()

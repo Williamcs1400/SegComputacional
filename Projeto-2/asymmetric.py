@@ -93,10 +93,10 @@ class AsymKey:
     # definicoes de variaveis necessarias
     n = p * q
     phi = (p-1) * (q-1) # calculo do totiente de Euler
-    e = random.randint(1, phi) # escolher um e entre 1 e phi que seja primo relativo a phi
+    e = 0x010001#random.randint(1, phi) # escolher um e entre 1 e phi que seja primo relativo a phi
     g = self.mdc(e,phi)
     while g != 1:
-        e = random.randint(1, phi)
+        e = random.randrange(1, phi)
         g = self.mdc(e, phi)
 
     # Gerar chaves
@@ -145,50 +145,8 @@ class RSA:
 class OAEP:
     def __init__(self):
         # definição de e
-        self.e = 0x010001
+        # self.e = 0x010001
         self.hlen = len(self.sha3(b''))
-
-    # https://pt.wikipedia.org/wiki/Algoritmo_de_Euclides
-    def euclid(self, a, b):
-        while b != 0:
-            a, b = b, a % b
-        return a
-
-    # https://pt.wikipedia.org/wiki/Algoritmo_de_Euclides_estendido
-    def extend_euclid(self, a, b):
-        if b == 0:
-            return 1, 0, a
-        else:
-            x, y, q = self.extend_euclid(b, a % b)
-            return y, x - (a // b) * y, q
-
-    # inverso multiplicativo modular
-    def modinv(self, a, b):
-        x, y, q = self.extend_euclid(a, b)
-        if q != 1:
-            return None
-        else:
-            return x % b
-
-    # Gera chaves publicas e privadas
-    def generateKeys(self):
-        # Podemos usar a ja implementada de AsymKey
-        key = AsymKey()
-        p = key.generateRandomPrime()
-        q = key.generateRandomPrime()
-
-        # Calculo das chaves publicas e privadas
-        n = p * q
-        phi = (p - 1) * (q - 1)
-        if self.e != None:
-            assert self.euclid(phi, self.e) == 1
-        else:
-            while True:
-                self.e = random.randrange(1, phi)
-                if self.euclid(self.e, phi) == 1:
-                    break
-        d = self.modinv(self.e, phi)
-        return ((self.e, n), (d, n))
 
     # Converte um inteiro nao negativo em byteArray
     def i2osp(self, num, length):
